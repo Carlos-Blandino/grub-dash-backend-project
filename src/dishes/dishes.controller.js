@@ -13,7 +13,6 @@ function list(req, res, next) {
 
 function isValidDish(req, res, next) {
   const requiredFields = ["name", "description", "price", "image_url"];
-
   for (const field of requiredFields) {
     if (!req.body.data[field]) {
       return next({
@@ -22,7 +21,6 @@ function isValidDish(req, res, next) {
       });
     }
   }
-
   next();
 }
 
@@ -39,7 +37,6 @@ function isPriceANumber(req, res, next) {
 
 function isPriceGreaterThanZero(req, res, next) {
   const { data: { price } = {} } = req.body;
-
   if (price > 0) {
     return next();
   }
@@ -76,8 +73,8 @@ function read(req, res, next) {
 function isDishIdExist(req, res, next) {
   const { dishId } = req.params;
   const foundDish = dishes.find((dish) => dish.id === dishId);
-
   if (foundDish) {
+    res.locals.dish = foundDish;
     next();
   }
   next({
@@ -97,17 +94,14 @@ function isIdMatchingDishId(req, res, next) {
   });
 }
 function update(req, res, next) {
-  const foundIndex = dishes.findIndex((dish) => dish.id === dishId);
-  const {
-    data: { name, description, image_url, price },
-  } = req.body;
-  dishes[foundIndex].name = name;
-  dishes[foundIndex].description = description;
-  dishes[foundIndex].image_url = image_url;
-  dishes[foundIndex].price = price;
-  res.status(200).json({ data: dishes[foundIndex] });
+  const { data: { name, description, price, image_url } = {} } = req.body;
+  const dish = res.locals.dish;
+  dish.name = name;
+  dish.description = description;
+  dish.image_url = image_url;
+  dish.price = price;
+  res.status(200).json({ data: dish });
 }
-
 module.exports = {
   list,
   create: [isValidDish, isPriceGreaterThanZero, create],
