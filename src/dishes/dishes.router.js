@@ -9,4 +9,10 @@ router
 .get(dishController.list)
 .post(dishController.create)
 .all(methodNotAllowed)
+
+router
+.route("/:dishId")
+.put(dishController.update)
+.get(dishController.read)
+.all(methodNotAllowed)
 module.exports = router;

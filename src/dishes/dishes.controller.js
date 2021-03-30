@@ -27,8 +27,6 @@ function isValidDish(req,res,next) {
            }
        }
        
-    
-    
     next();
 }
 function create(req,res,next) {
@@ -47,7 +45,50 @@ res.status(201).json({data: newDish});
 
 }
 
+function read(req,res,next){
+    const {dishId }= req.params
+    const foundDish = dishes.find((dish)=> dish.id === dishId);
+    if(foundDish){
+        res.status(200).json({data: foundDish});
+    } 
+    next({status: 404, message: `${dishId} is not valid`})
+}
+function update(req, res, next) {
+    const { dishId } = req.params;
+    const foundIndex = dishes.findIndex((dish) => dish.id === Number(dishId));
+    if (foundIndex !== -1) {
+      const dish = dishes[foundIndex];
+      const {
+        data: { name, description, image_url, price },
+      } = req.body;
+      dish.name = name;
+      dish.description = description;
+      dish.image_url = image_url;
+      dish.price = price;
+      res.status(200).json({ data: dishes[foundIndex] });
+    } else {
+      next({ status: 404, message: `${dishId} is not valid` });
+    }
+    const {
+      data: { name, description, image_url, price },
+    } = req.body;
+  
+    if (foundDish) {
+      const newDish = {
+        id: foundDish.id,
+        name: name,
+        description: description,
+        image_url: image_url,
+        price: price,
+      };
+    }
+    next({ status: 404, message: `${dishId} is not valid` });
+  }
+
 module.exports = {
     list,
-    create:[isValidDish, create]
+    create:[isValidDish, create],
+    read,
+    update: [isValidDish, update],
+
 }
