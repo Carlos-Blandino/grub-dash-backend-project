@@ -22,15 +22,25 @@ function isOrderValid(req, res, next) {
 
   next();
 }
+function isDishArrayEmpty(req, res, next) {
+    const { data: { dishes } = {} } = req.body;
+    if (dishes.length === 0) {
+      next({
+        status: 400,
+        message: `Order must include at least one dish.`,
+      });
+    }
+    next();
+  }
 function isDishAValidArray(req, res, next) {
-  //   const { data: { dishes } = {} } = req.body;
-  //   if (typeof dishes === "array") {
-  //     return next();
-  //   }
-  //   next({
-  //     status: 400,
-  //     message: `Order must include at least one dish.`,
-  //   });
+    const { data: { dishes } = {} } = req.body;
+    if (Array.isArray(dishes)) {
+      return next();
+    }
+    next({
+      status: 400,
+      message: `Order must include at least one dish.`,
+    });
   next();
 }
 
@@ -102,6 +112,7 @@ module.exports = {
   create: [
     isOrderValid,
     isDishAValidArray,
+    isDishArrayEmpty,
     isDishQuantityMissing,
     isDishQuantityZero,
     isDishQuantityInterger,
