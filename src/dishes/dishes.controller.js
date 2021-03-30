@@ -20,6 +20,7 @@ function isValidDish(req,res,next) {
   
     for ( const field of requiredFields){
        if(!req.body.data[field]) {
+           
         return next({
                 status: 400,
                 message: `${field} is required`
@@ -29,6 +30,28 @@ function isValidDish(req,res,next) {
        
     next();
 }
+
+function isPriceANumber(req, res, next) {
+    const { data: { price } = {} } = req.body;
+    if (Number.isInteger(price)) {
+      next();
+    }
+    next({
+        status: 400,
+        message: "Dish must have a price that is an integer greater than 0",
+      });
+  }
+function isPriceGreaterThanZero(req, res, next) {
+    const { data: { price } = {} } = req.body;
+    if (price > 0) {
+      return next();
+    }
+    next({
+      status: 400,
+      message: `Dish must have a price that is an integer greater than 0`,
+    });
+}
+
 function create(req,res,next) {
     
     const {data: {name, description, image_url,price}} = req.body
@@ -56,15 +79,18 @@ function read(req,res,next){
 function update(req, res, next) {
     const { dishId } = req.params;
     const foundIndex = dishes.findIndex((dish) => dish.id === Number(dishId));
+    if(foundIndex === -1){
+        next({status: 400, message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`})
+    }
     if (foundIndex !== -1) {
-      const dish = dishes[foundIndex];
+      
       const {
         data: { name, description, image_url, price },
       } = req.body;
-      dish.name = name;
-      dish.description = description;
-      dish.image_url = image_url;
-      dish.price = price;
+      dishes[foundIndex].name = name;
+      dishes[foundIndex].description = description;
+      dishes[foundIndex].image_url = image_url;
+      dishes[foundIndex].price = price;
       res.status(200).json({ data: dishes[foundIndex] });
     } else {
       next({ status: 404, message: `${dishId} is not valid` });
@@ -87,8 +113,8 @@ function update(req, res, next) {
 
 module.exports = {
     list,
-    create:[isValidDish, create],
+    create:[isValidDish, isPriceGreaterThanZero, create],
     read,
-    update: [isValidDish, update],
+    update: [isValidDish, isPriceGreaterThanZero, isPriceANumber,update],
 
 }
