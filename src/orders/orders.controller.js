@@ -22,6 +22,18 @@ function isOrderValid(req, res, next) {
 
   next();
 }
+function orderExists(req, res, next) {
+    const { orderId } = req.params;
+    const foundOrder = orders.find((order) => order.id === orderId);
+    if (foundOrder) {
+      res.locals.order = foundOrder;
+      return next();
+    }
+    next({
+      status: 404,
+      message: `Order id not found: ${orderId}`,
+    });
+  }
 function isDishArrayEmpty(req, res, next) {
     const { data: { dishes } = {} } = req.body;
     if (dishes.length === 0) {
@@ -97,7 +109,7 @@ function create(req, res, next) {
   res.status(201).json({ data: newOrder });
 }
 function read(req, res, next) {
-  next();
+   res.json({ data: res.locals.order });
 }
 function update(req, res, next) {
   next();
@@ -118,8 +130,8 @@ module.exports = {
     isDishQuantityInterger,
     create,
   ],
-  read,
-  update,
-  destroy,
+  read:[orderExists, read],
+  update:[orderExists,isOrderValid, update],
+  delete:[orderExists, destroy],
   list,
 };

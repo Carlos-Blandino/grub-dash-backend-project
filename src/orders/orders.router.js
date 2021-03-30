@@ -13,6 +13,6 @@ router
   .route("/:orderId")
   .put(orderController.update)
   .get(orderController.read)
-  .delete(orderController.destroy)
+  .delete(orderController.delete)
   .all(methodNotAllowed);
 module.exports = router;
