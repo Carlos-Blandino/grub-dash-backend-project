@@ -19,7 +19,6 @@ function isOrderValid(req, res, next) {
       });
     }
   }
-
   next();
 }
 function isDishAValidArray(req, res, next) {
@@ -96,22 +95,11 @@ function create(req, res, next) {
   orders.push(newOrder);
   res.status(201).json({ data: newOrder });
 }
-function orderExists(req, res, next) {
-  const { orderId } = req.params;
-  const foundOrder = orders.find((order) => order.id === orderId);
-  if (foundOrder) {
-    res.locals.order = foundOrder;
-    return next();
-  }
-  next({
-    status: 404,
-    message: `Order id not found: ${orderId}`,
-  });
-}
+
 function isIdMatchingOrderId(req, res, next) {
-  const { data: { id } = {} } = req.body;
+  const { id } = req.body.data;
   const { orderId } = req.params;
-  if (id === orderId) {
+  if (id === orderId || !id) {
     return next();
   }
   next({
@@ -123,16 +111,16 @@ function isIdMatchingOrderId(req, res, next) {
 function read(req, res, next) {
   res.json({ data: res.locals.order });
 }
+
 function update(req, res, next) {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
-  const newOrder = {
-    deliverTo: deliverTo,
-    mobileNumber: mobileNumber,
-    status: status,
-    dishes: dishes,
-  };
-  orders.push(newOrder);
-  res.status(201).json({ data: newOrder });
+  const { orderId } = req.params;
+  const order = orders.find((order) => order.id === orderId);
+  order.deliverTo = deliverTo;
+  order.mobileNumber = mobileNumber;
+  order.status = status;
+  order.dishes = dishes;
+  res.json({ data: order });
 }
 
 function isStatusDelivered(req, res, next) {
@@ -145,6 +133,7 @@ function isStatusDelivered(req, res, next) {
   }
   return next();
 }
+
 function isStatusValueMissing(req, res, next) {
   const { data: { status } = {} } = req.body;
   if (
@@ -160,6 +149,7 @@ function isStatusValueMissing(req, res, next) {
     message: `Order must have a status of pending, preparing, out-for-delivery, delivered.`,
   });
 }
+
 function isOrderStatusPending(req, res, next) {
   const { orderId } = req.params;
   const foundOrder = orders.find((order) => order.id === orderId);
@@ -174,23 +164,43 @@ function isOrderStatusPending(req, res, next) {
     });
   }
 }
+
 function destroy(req, res, next) {
   const { orderId } = req.params;
   const index = orders.findIndex((order) => order.id === orderId);
   orders.splice(index, 1);
   res.sendStatus(204);
 }
-// function isDataIdMissing(req, res, next) {
-//   const { orderId } = res.params;
-//   const foundOrder = orders.find((order) => order.id === orderId);
-//   if (!res.locals.body.data.id) {
-//     next();
-//   }
-// }
+
 function list(req, res, next) {
   res.status(200).json({ data: orders });
 }
+
+function orderExists(req, res, next) {
+  const { orderId } = req.params;
+  const foundOrder = orders.find((order) => order.id === orderId);
+  if (foundOrder) {
+    res.locals.order = foundOrder;
+    return next();
+  }
+  next({
+    status: 404,
+    message: `Order id not found: ${orderId}`,
+  });
+}
+
+function update(req, res) {
+  const order = res.locals.order;
+  const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
+  order.deliverTo = deliverTo;
+  order.mobileNumber = mobileNumber;
+  order.status = status;
+  order.dishes = dishes;
+  res.json({ data: order });
+}
+
 module.exports = {
+  list,
   create: [
     isOrderValid,
     isDishAValidArray,
@@ -203,20 +213,16 @@ module.exports = {
   read: [orderExists, read],
   update: [
     orderExists,
-
     isOrderValid,
     isDishAValidArray,
     isDishArrayEmpty,
     isDishQuantityMissing,
     isDishQuantityZero,
-
     isDishQuantityInterger,
-
     isIdMatchingOrderId,
     isStatusValueMissing,
     isStatusDelivered,
     update,
   ],
   delete: [orderExists, isOrderStatusPending, destroy],
-  list,
 };
