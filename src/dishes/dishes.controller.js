@@ -13,6 +13,7 @@ function list(req, res, next) {
 
 function isValidDish(req, res, next) {
   const requiredFields = ["name", "description", "price", "image_url"];
+
   for (const field of requiredFields) {
     if (!req.body.data[field]) {
       return next({
@@ -21,6 +22,7 @@ function isValidDish(req, res, next) {
       });
     }
   }
+
   next();
 }
 
@@ -37,6 +39,7 @@ function isPriceANumber(req, res, next) {
 
 function isPriceGreaterThanZero(req, res, next) {
   const { data: { price } = {} } = req.body;
+
   if (price > 0) {
     return next();
   }
@@ -73,6 +76,7 @@ function read(req, res, next) {
 function isDishIdExist(req, res, next) {
   const { dishId } = req.params;
   const foundDish = dishes.find((dish) => dish.id === dishId);
+
   if (foundDish) {
     res.locals.dish = foundDish;
     next();
@@ -93,6 +97,7 @@ function isIdMatchingDishId(req, res, next) {
     message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}.`,
   });
 }
+
 function update(req, res, next) {
   const { data: { name, description, price, image_url } = {} } = req.body;
   const dish = res.locals.dish;
@@ -102,6 +107,7 @@ function update(req, res, next) {
   dish.price = price;
   res.status(200).json({ data: dish });
 }
+
 module.exports = {
   list,
   create: [isValidDish, isPriceGreaterThanZero, create],
